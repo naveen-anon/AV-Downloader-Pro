@@ -1,114 +1,15 @@
-import os
-import sys
-import shutil
-import platform
-from pathlib import Path
-from colorama import init, Fore
-from yt_dlp import YoutubeDL
+import os, sys, shutil, json, urllib.request, zipfile, platform from pathlib import Path from colorama import init, Fore, Style from yt_dlp import YoutubeDL
 
-init(autoreset=True)
+init(autoreset=True) VERSION='2.0.0' DEV='naveen_anon' REPO_API='https://api.github.com/repos/yourusername/AV-Downloader-Pro/releases/latest' HOME=Path.home() TERMUX='com.termux' in str(HOME) or os.getenv('PREFIX','').startswith('/data/data/com.termux') SAVE_DIR=(HOME/'storage'/'downloads') if TERMUX else (HOME/'Videos') SAVE_DIR.mkdir(parents=True, exist_ok=True)
 
-HOME = Path.home()
+BANNER=f'''{Fore.RED} █████╗ ██╗   ██╗ ██╔══██╗██║   ██║ ███████║██║   ██║ ██╔══██║╚██╗ ██╔╝ ██║  ██║ ╚████╔╝ ╚═╝  ╚═╝  ╚═══╝ {Fore.YELLOW}AV Downloader Pro {VERSION} {Fore.CYAN}YouTube • Shorts • MP3 {Fore.GREEN}Termux • Kali • NetHunter {Fore.MAGENTA}Developer: {DEV} {Fore.WHITE}Save Folder: {SAVE_DIR} '''
 
-# Detect environment
-TERMUX = "com.termux" in str(HOME) or os.getenv("PREFIX", "").startswith("/data/data/com.termux")
-NETHUNTER = "kali" in platform.platform().lower()
+def clear(): os.system('clear' if os.name!='nt' else 'cls') def ffmpeg_ok(): return shutil.which('ffmpeg') is not None
 
-# Save path
-if TERMUX:
-    SAVE_DIR = HOME / "storage" / "downloads"
-else:
-    SAVE_DIR = HOME / "Videos"
+def check_update(): try: with urllib.request.urlopen(REPO_API, timeout=4) as r: data=json.loads(r.read().decode()) latest=data.get('tag_name','').replace('v','') if latest and latest!=VERSION: print(Fore.YELLOW+f'[UPDATE] New version available: {latest}') except: pass
 
-SAVE_DIR.mkdir(parents=True, exist_ok=True)
+def download(url, mode, quality='best'): post=[]; fmt='best' if mode=='1': fmt='bestvideo+bestaudio/best' if quality=='best' else f'bestvideo[height<={quality}]+bestaudio/best' elif mode=='2': fmt='best[height<=1080]/best' elif mode=='3': fmt='bestaudio/best' post=[{'key':'FFmpegExtractAudio','preferredcodec':'mp3','preferredquality':'192'}] opts={ 'outtmpl': str(SAVE_DIR/'%(title)s.%(ext)s'), 'format': fmt, 'merge_output_format':'mp4', 'postprocessors': post, 'noplaylist': True } with YoutubeDL(opts) as y: y.download([url])
 
-# Banner
-BANNER = f"""
-{Fore.RED}███╗   ██╗ {Fore.YELLOW}AV Downloader Pro
-{Fore.GREEN}████╗  ██║ {Fore.CYAN}YouTube / Shorts / Audio
-{Fore.BLUE}██╔██╗ ██║ {Fore.MAGENTA}Termux + Kali + NetHunter
-{Fore.WHITE}Developer: naveen_anon
-{Fore.YELLOW}Save Folder: {SAVE_DIR}
-"""
+def make_zip(): z='AV_Downloader_Pro_Portable.zip' with zipfile.ZipFile(z,'w') as f: f.write(file, arcname='av_downloader_pro_all_in_one.py') print(Fore.GREEN+f'Created {z}')
 
-def clear():
-    os.system("clear" if os.name != "nt" else "cls")
-
-def ffmpeg_ok():
-    return shutil.which("ffmpeg") is not None
-
-def download(url, mode, quality="best"):
-    post = []
-    fmt = "best"
-
-    if mode == "1":  # Video
-        if quality == "best":
-            fmt = "bestvideo+bestaudio/best"
-        else:
-            fmt = f"bestvideo[height<={quality}]+bestaudio/best"
-
-    elif mode == "2":  # Shorts
-        fmt = "best[height<=1080]/best"
-
-    elif mode == "3":  # MP3
-        fmt = "bestaudio/best"
-        post = [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192"
-        }]
-
-    opts = {
-        "outtmpl": str(SAVE_DIR / "%(title)s.%(ext)s"),
-        "format": fmt,
-        "merge_output_format": "mp4",
-        "noplaylist": True,
-        "postprocessors": post,
-        "quiet": False
-    }
-
-    with YoutubeDL(opts) as ydl:
-        ydl.download([url])
-
-def menu():
-    print(Fore.YELLOW + "[1] Download Video")
-    print(Fore.CYAN + "[2] Download Shorts")
-    print(Fore.GREEN + "[3] Download Audio MP3")
-    print(Fore.MAGENTA + "[4] Open Save Folder")
-    print(Fore.RED + "[5] Exit\n")
-
-while True:
-    clear()
-    print(BANNER)
-
-    if not ffmpeg_ok():
-        print(Fore.RED + "[!] ffmpeg not installed (recommended)\n")
-
-    menu()
-    choice = input("Choose option: ").strip()
-
-    if choice == "5":
-        sys.exit()
-
-    elif choice == "4":
-        print(f"\nSaved files location:\n{SAVE_DIR}")
-        input("\nPress Enter...")
-        continue
-
-    elif choice in ["1", "2", "3"]:
-        url = input("Enter YouTube URL: ").strip()
-        quality = "best"
-
-        if choice == "1":
-            quality = input("Quality 360/480/720/1080 or best: ").strip() or "best"
-
-        try:
-            download(url, choice, quality)
-            print(Fore.GREEN + f"\nDownload completed!\nSaved in: {SAVE_DIR}")
-        except Exception as e:
-            print(Fore.RED + f"\nError: {e}")
-
-        input("\nPress Enter to continue...")
-
-    else:
-        input("Invalid option! Press Enter...")
+while True: clear(); print(BANNER); check_update() if not ffmpeg_ok(): print(Fore.RED+'[!] ffmpeg not installed (recommended)\n') print(Fore.YELLOW+'[1] Download Video') print(Fore.CYAN+'[2] Download Shorts') print(Fore.GREEN+'[3] Download MP3') print(Fore.BLUE+'[4] Create ZIP Release') print(Fore.MAGENTA+'[5] Open Save Folder') print(Fore.RED+'[6] Exit\n') ch=input('Choose: ').strip() if ch=='6': sys.exit() elif ch=='5': print(SAVE_DIR); input('Enter...') elif ch=='4': make_zip(); input('Enter...') elif ch in ('1','2','3'): url=input('URL: ').strip(); q='best' if ch=='1': q=input('360/480/720/1080/best: ').strip() or 'best' try: download(url,ch,q) print(Fore.GREEN+'Done!') except Exception as e: print(Fore.RED+str(e)) input('Enter...')
