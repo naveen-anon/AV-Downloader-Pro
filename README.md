@@ -65,7 +65,8 @@ Designed especially for:
 ```bash
 pkg update -y
 pkg install python ffmpeg -y
-pip install yt-dlp colorama
+pip install -r requirments.txt
+git clone https://github.com/naveen-anon/AV-Downloader-Pro.githttps://github.com/naveen-anon/AV-Downloader-Pro.git
 termux-setup-storage
 python yt_downloader.py
 ```
@@ -74,7 +75,8 @@ python yt_downloader.py
 ```bash
 sudo apt update
 sudo apt install python3-pip ffmpeg -y
-pip install yt-dlp colorama
+pip install -r requirments.txt --break-system
+git clone https://github.com/naveen-anon/AV-Downloader-Pro.git
 python3 yt_downloader.py
 ```
 
